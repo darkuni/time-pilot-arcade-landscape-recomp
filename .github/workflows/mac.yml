@@ -1,0 +1,13 @@
+name: mac-build
+on: [workflow_dispatch, push]
+jobs:
+  mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: {go-version: '1.24'}
+      - run: ./scripts/build-mac.sh
+      - run: cd dist/mac && zip -qry ../../TimePilot-mac.zip "Time Pilot.app"
+      - uses: actions/upload-artifact@v4
+        with: {name: TimePilot-mac, path: TimePilot-mac.zip}
