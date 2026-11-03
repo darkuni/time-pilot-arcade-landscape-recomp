@@ -5,6 +5,9 @@
 //
 // Controls:  arrows move, Z fire, 5 insert coin, 1 / 2 start one / two player
 // game, L switch landscape / portrait layout, F3 input/heading overlay, F11 toggle full screen, Esc quit.
+//
+// Gamepad: D-pad/left stick move, A or B fire, Select coin, Start 1 player,
+// X or Y 2 players, right bumper change layout, hold Select+Start to quit.
 package main
 
 import (
@@ -27,16 +30,18 @@ import (
 )
 
 type app struct {
-	g      *game.Game
-	r      *video.Renderer
-	rgba   *image.RGBA
-	screen *ebiten.Image
-	land   *image.RGBA
-	hud    *image.RGBA
-	landIm *ebiten.Image
-	debug  bool
-	in1    uint8
-	ph     [2]*image.RGBA
+	pad        padTracker
+	coinFrames int
+	g          *game.Game
+	r          *video.Renderer
+	rgba       *image.RGBA
+	screen     *ebiten.Image
+	land       *image.RGBA
+	hud        *image.RGBA
+	landIm     *ebiten.Image
+	debug      bool
+	in1        uint8
+	ph         [2]*image.RGBA
 	// landscape is the default layout; L switches to the original portrait one
 	landscape bool
 	synth     *sound.Synth
@@ -108,6 +113,46 @@ func (a *app) Update() error {
 	}
 	if down(ebiten.KeyZ) {
 		in1 &^= 0x10 // fire
+	}
+	pd := a.pad.poll()
+	if pd.quit {
+		return ebiten.Termination
+	}
+	if pd.view {
+		a.landscape = !a.landscape
+		w, h := a.size()
+		if !ebiten.IsFullscreen() {
+			ebiten.SetWindowSize(w*3, h*3)
+		}
+	}
+	if pd.coin || a.coinFrames > 0 {
+		in0 &^= 0x01
+		if pd.coin {
+			a.coinFrames = 3
+		} else {
+			a.coinFrames--
+		}
+	}
+	if pd.start1 {
+		in0 &^= 0x08
+	}
+	if pd.start2 {
+		in0 &^= 0x10
+	}
+	if pd.left {
+		in1 &^= 0x01
+	}
+	if pd.right {
+		in1 &^= 0x02
+	}
+	if pd.up {
+		in1 &^= 0x04
+	}
+	if pd.down {
+		in1 &^= 0x08
+	}
+	if pd.fire {
+		in1 &^= 0x10
 	}
 	a.g.In0, a.g.In1, a.g.In2 = in0, in1, in1
 	a.in1 = in1

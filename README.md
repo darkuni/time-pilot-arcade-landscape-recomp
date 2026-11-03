@@ -19,6 +19,8 @@ Put `timeplt.zip` next to `timepilot.exe` (or pass its path as the first argumen
 | F11 | Full screen |
 | Esc | Quit |
 
+**Gamepad** (any standard controller, Steam Deck included): D-pad / left stick move, A or B fire, Select = coin, Start = 1 player, X or Y = 2 players, right bumper = switch layout, hold Select + Start for a second to quit.
+
 ## Layout
 
 | Path | Purpose |
