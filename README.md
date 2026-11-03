@@ -84,5 +84,5 @@ GitHub macOS runner.)
 ## Releases
 
 Publishing a GitHub release runs `.github/workflows/release.yml`, which builds
-`timepilot.exe` (Windows) and `TimePilot-mac.zip` (universal macOS app) and attaches
+`timepilot.exe` (Windows), `TimePilot-linux.tar.gz` (Linux x86_64, runs on Steam Deck / SteamOS desktop mode) and `TimePilot-mac.zip` (universal macOS app) and attaches
 them to the release. Neither contains the ROM: put your own `timeplt.zip` next to the game.
