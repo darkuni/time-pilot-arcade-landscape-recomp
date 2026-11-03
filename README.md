@@ -78,5 +78,11 @@ Ebitengine needs cgo on macOS, so the Mac build cannot be cross-compiled from
 Windows/Linux. On a Mac with Go 1.24+ and the Xcode command line tools run
 `./scripts/build-mac.sh`; it makes a universal, ad-hoc-signed `Time Pilot.app`.
 Put `timeplt.zip` next to the app (or in your home folder). First launch:
-right-click the app, Open. (`.github/workflows/mac.yml` does the same on a
+right-click the app, Open. (`.github/workflows/release.yml` does the same on a
 GitHub macOS runner.)
+
+## Releases
+
+Publishing a GitHub release runs `.github/workflows/release.yml`, which builds
+`timepilot.exe` (Windows) and `TimePilot-mac.zip` (universal macOS app) and attaches
+them to the release. Neither contains the ROM: put your own `timeplt.zip` next to the game.
