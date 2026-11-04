@@ -16,10 +16,22 @@ Put `timeplt.zip` next to `timepilot.exe` (or pass its path as the first argumen
 | 5 | Insert coin |
 | 1 / 2 | Start 1 / 2 player game |
 | L | Switch landscape (default) / portrait layout |
+| P | Time Pilot+ statistics panels on / off |
 | F11 | Full screen |
 | Esc | Quit |
 
-**Gamepad** (any standard controller, Steam Deck included): D-pad / left stick move, A or B fire, Select = coin, Start = 1 player, X or Y = 2 players, right bumper = switch layout, hold Select + Start for a second to quit.
+**Gamepad** (any standard controller, Steam Deck included): D-pad / left stick move, A or B fire, Select = coin, Start = 1 player, X or Y = 2 players, right bumper = switch layout, right-stick click = Time Pilot+ on / off, hold Select + Start for a second to quit.
+
+## Time Pilot+
+
+The landscape layout has side-panel statistics, on by default and always one key away from the original:
+
+* **Left panel** - this game: kills, bosses, parachutists rescued, accuracy; then your all-time games, kills, bosses and rescues. In a two-player game it follows whose turn it is ("PLAYER 2 STATS"), and each player keeps separate numbers.
+* **Right panel** - BEST CHAIN (your longest run of kills inside the game's chain window, the one that climbs the points ladder), then kills per era with each era's enemy plane (1910, 1940, 1970, 1982, 2001): white is this game, grey is all time.
+* **P** (or a click of the right stick) switches the panels off and back on, and remembers the choice. With them off you get the plain landscape layout; **L** still gives the original portrait picture. `timepilot -classic` starts in the original portrait picture with no statistics.
+* All-time totals are saved in your user config folder (`timepilot/stats.json`).
+
+The statistics only listen to the game; they never change how it plays.
 
 ## Layout
 

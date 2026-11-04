@@ -171,3 +171,47 @@ func (r *Renderer) blit(flip bool, dst *image.RGBA) {
 		}
 	}
 }
+
+// SpriteImage pictures sprite tile code in the colours of the raw attribute
+// byte attr (as the game stores it, before the hardware transform), turned
+// upright like the cabinet screen and cropped to its visible pixels; pixels
+// of colour 0 are transparent. It is used by the statistics panels.
+func (r *Renderer) SpriteImage(code, attr uint8) *image.RGBA {
+	col := int(attr & 0x3f)
+	flipx := attr&0x40 != 0
+	flipy := attr&0x80 == 0
+	tile := &r.sprites[code]
+	full := image.NewRGBA(image.Rect(0, 0, 16, 16))
+	minX, minY, maxX, maxY := 16, 16, -1, -1
+	for ty := 0; ty < 16; ty++ {
+		yy := ty
+		if flipy {
+			yy = 15 - ty
+		}
+		for tx := 0; tx < 16; tx++ {
+			xx := tx
+			if flipx {
+				xx = 15 - tx
+			}
+			p := tile[yy][xx]
+			if p == 0 {
+				continue
+			}
+			c := r.pal[r.sprLUT[col*4+int(p)]&0x0f]
+			dx, dy := ty, 15-tx // the cabinet's 90 degree turn
+			full.SetRGBA(dx, dy, color.RGBA{c.R, c.G, c.B, 255})
+			minX, minY = min(minX, dx), min(minY, dy)
+			maxX, maxY = max(maxX, dx), max(maxY, dy)
+		}
+	}
+	if maxX < 0 {
+		return full
+	}
+	out := image.NewRGBA(image.Rect(0, 0, maxX-minX+1, maxY-minY+1))
+	for y := minY; y <= maxY; y++ {
+		for x := minX; x <= maxX; x++ {
+			out.SetRGBA(x-minX, y-minY, full.RGBAAt(x, y))
+		}
+	}
+	return out
+}

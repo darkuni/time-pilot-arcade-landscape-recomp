@@ -4,18 +4,24 @@
 // tables and sound data; none of Konami's data is bundled with this program.
 //
 // Controls:  arrows move, Z fire, 5 insert coin, 1 / 2 start one / two player
-// game, L switch landscape / portrait layout, F3 input/heading overlay, F11 toggle full screen, Esc quit.
+// game, L switch landscape / portrait layout, P switch Time Pilot+ (side-panel
+// statistics) on or off, F3 input/heading overlay, F11 toggle full screen, Esc quit.
 //
 // Gamepad: D-pad/left stick move, A or B fire, Select coin, Start 1 player,
-// X or Y 2 players, right bumper change layout, hold Select+Start to quit.
+// X or Y 2 players, right bumper change layout, click the right stick to
+// switch Time Pilot+ on or off, hold Select+Start to quit.
+//
+// Option -classic starts with the original portrait picture and no statistics.
 package main
 
 import (
 	"fmt"
 	"image"
+	"image/color"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -26,6 +32,7 @@ import (
 	"timepilot/internal/assets"
 	"timepilot/internal/game"
 	"timepilot/internal/sound"
+	"timepilot/internal/stats"
 	"timepilot/internal/video"
 )
 
@@ -46,6 +53,12 @@ type app struct {
 	landscape bool
 	synth     *sound.Synth
 	sndIRQ    int
+	// plus shows the Time Pilot+ statistics panels in the landscape layout
+	plus      bool
+	tr        *stats.Tracker
+	trFrames  int
+	notice    int // frames left to show the Plus message
+	noticeMsg string
 }
 
 const sampleRate = 48000
@@ -81,6 +94,9 @@ func (a *app) Update() error {
 		if !ebiten.IsFullscreen() {
 			ebiten.SetWindowSize(w*3, h*3)
 		}
+	}
+	if inpututil.IsKeyJustPressed(ebiten.KeyP) {
+		a.togglePlus()
 	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyF11) {
 		ebiten.SetFullscreen(!ebiten.IsFullscreen())
@@ -125,6 +141,9 @@ func (a *app) Update() error {
 			ebiten.SetWindowSize(w*3, h*3)
 		}
 	}
+	if pd.plus {
+		a.togglePlus()
+	}
 	if pd.coin || a.coinFrames > 0 {
 		in0 &^= 0x01
 		if pd.coin {
@@ -157,6 +176,12 @@ func (a *app) Update() error {
 	a.g.In0, a.g.In1, a.g.In2 = in0, in1, in1
 	a.in1 = in1
 	a.g.Frame()
+	a.tr.Frame()
+	a.trFrames++
+	if a.trFrames >= 600 && a.tr.Dirty {
+		a.trFrames = 0
+		a.saveStats()
+	}
 	if a.g.SoundIRQ != a.sndIRQ {
 		a.sndIRQ = a.g.SoundIRQ
 		a.synth.Command(a.g.SoundLatch)
@@ -187,10 +212,15 @@ func (a *app) Draw(screen *ebiten.Image) {
 			}
 		}
 		video.Landscape(a.land, a.rgba, a.hud, p[0], p[1])
+		if a.plus {
+			stats.DrawPanels(a.land, a.tr)
+		}
+		a.drawNotice(a.land, 4, 207)
 		a.landIm.WritePixels(a.land.Pix)
 		screen.DrawImage(a.landIm, nil)
 		return
 	}
+	a.drawNotice(a.rgba, 2, 2)
 	a.screen.WritePixels(a.rgba.Pix)
 	screen.DrawImage(a.screen, nil)
 }
@@ -204,9 +234,71 @@ func (a *app) size() (int, int) {
 
 func (a *app) Layout(_, _ int) (int, int) { return a.size() }
 
+// togglePlus switches the Time Pilot+ panels on or off and remembers it.
+func (a *app) togglePlus() {
+	a.plus = !a.plus
+	a.notice = 150
+	a.noticeMsg = "TIME PILOT+: OFF (ORIGINAL)"
+	if a.plus {
+		a.noticeMsg = "TIME PILOT+: ON"
+	}
+	savePlus(a.plus)
+}
+
+// drawNotice shows the short Plus message for a couple of seconds.
+func (a *app) drawNotice(dst *image.RGBA, x, y int) {
+	if a.notice <= 0 {
+		return
+	}
+	a.notice--
+	stats.DrawText(dst, x+1, y+1, a.noticeMsg, color.RGBA{0, 0, 0, 255}, 1)
+	stats.DrawText(dst, x, y, a.noticeMsg, color.RGBA{255, 255, 73, 255}, 1)
+}
+
+// saveStats writes the all-time statistics.
+func (a *app) saveStats() {
+	if f := configFile("stats.json"); f != "" {
+		_ = os.MkdirAll(filepath.Dir(f), 0o755)
+		_ = a.tr.Save(f)
+	}
+}
+
+func configFile(name string) string {
+	d, err := os.UserConfigDir()
+	if err != nil {
+		return ""
+	}
+	return filepath.Join(d, "timepilot", name)
+}
+
+// Time Pilot+ (the statistics panels) is on by default; the choice is remembered.
+func loadPlus() bool {
+	if f := configFile("plus.txt"); f != "" {
+		if b, err := os.ReadFile(f); err == nil {
+			return strings.TrimSpace(string(b)) != "classic"
+		}
+	}
+	return true
+}
+
+func savePlus(on bool) {
+	f := configFile("plus.txt")
+	if f == "" {
+		return
+	}
+	v := "classic"
+	if on {
+		v = "plus"
+	}
+	_ = os.MkdirAll(filepath.Dir(f), 0o755)
+	_ = os.WriteFile(f, []byte(v+"\n"), 0o644)
+}
+
 func findROM() string {
-	if len(os.Args) > 1 {
-		return os.Args[1]
+	for _, arg := range os.Args[1:] {
+		if !strings.HasPrefix(arg, "-") {
+			return arg
+		}
 	}
 	cands := []string{"timeplt.zip"}
 	if exe, err := os.Executable(); err == nil {
@@ -246,6 +338,12 @@ func main() {
 	}
 	g := game.New(roms.Main[:])
 	g.Boot()
+	classic := false
+	for _, arg := range os.Args[1:] {
+		if arg == "-classic" || arg == "--classic" {
+			classic = true
+		}
+	}
 	a := &app{
 		g:      g,
 		r:      video.New(roms),
@@ -255,10 +353,16 @@ func main() {
 		land:   image.NewRGBA(image.Rect(0, 0, video.LandscapeW, video.LandscapeH)),
 		landIm: ebiten.NewImage(video.LandscapeW, video.LandscapeH),
 
-		landscape: true,
+		landscape: !classic,
+		plus:      loadPlus() && !classic,
 	}
 	for i := range a.ph {
 		a.ph[i] = image.NewRGBA(image.Rect(0, 0, video.ScreenW, video.ScreenH))
+	}
+	a.tr = stats.New(g)
+	a.tr.Icons = stats.EnemyIcons(g, a.r)
+	if f := configFile("stats.json"); f != "" {
+		a.tr.Load(f)
 	}
 	a.synth = sound.NewSynth(roms.Sound[:], sampleRate)
 	a.sndIRQ = g.SoundIRQ
@@ -271,10 +375,12 @@ func main() {
 	player.SetBufferSize(60 * time.Millisecond)
 	player.Play()
 	ebiten.SetWindowTitle("Time Pilot")
-	ebiten.SetWindowSize(video.LandscapeW*3, video.LandscapeH*3)
+	ww, wh := a.size()
+	ebiten.SetWindowSize(ww*3, wh*3)
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	ebiten.SetTPS(60)
 	if err := ebiten.RunGame(a); err != nil {
 		log.Fatal(err)
 	}
+	a.saveStats()
 }

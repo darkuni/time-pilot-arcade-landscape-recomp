@@ -15,8 +15,10 @@ func (g *Game) bonusSound() {
 		n := g.rb(0xa99e) + 1
 		g.wb(0xa99e, n)
 		g.enq(4, n&7+1)
+		g.emit(EvKill, int(n)+1, 0)
 	} else {
 		g.enq(4, 1)
+		g.emit(EvKill, 1, 0)
 	}
 	g.wb(0xa99d, 0x1e)
 }
@@ -119,6 +121,7 @@ func (g *Game) bulletsVsRecords(c cursor, b int, l, h uint8) {
 					inBox(g.rb(bp+6), ex, l, h) && inBox(g.rb(bp+4), ey, l, h) {
 					g.wb(bp, 0xf0)
 					g.wb(cc.de, 0xf0)
+					g.emit(EvHit, 0, 0)
 					g.bonusSound()
 				}
 			}
@@ -141,6 +144,7 @@ func (g *Game) bulletsVsBoss(rec, spr uint16, l, h uint8) {
 		if inBox(g.rb(spr), g.rb(bp+6), l, h) && inBox(g.rb(spr+0x31), g.rb(bp+4), 0x17, 0x1f) {
 			g.wb(rec, 0xf0)
 			g.wb(bp, 0xf0)
+			g.emit(EvHit, 0, 0)
 			g.bonusSound()
 		}
 	}

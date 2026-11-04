@@ -196,6 +196,7 @@ func (g *Game) spawnBullet() {
 		ix += stride
 	}
 	g.sndPushLoud(g.k(0x3270))
+	g.emit(EvShot, 0, 0)
 	vx := (0 - g.rw(0xa808)) << 2
 	vy := (0 - g.rw(0xa80a)) << 2
 	g.ww(ix+10, vx)

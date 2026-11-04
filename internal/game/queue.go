@@ -145,6 +145,7 @@ func (g *Game) addScore(idx uint8) {
 	if g.rb(vPlayer2) != 0 {
 		dst = vScoreP2
 	}
+	g.emit(EvScore, int(idx), g.scoreValue(idx))
 	var carry bool
 	var v uint8
 	for i := uint16(0); i < 3; i++ {

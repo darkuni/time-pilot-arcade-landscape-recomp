@@ -42,6 +42,9 @@ type Game struct {
 	rtab         map[uint16]func()
 	aimD, aimE   uint8  // |dy| and |dx| left behind by aimLookup (D and E)
 	ix, iy       uint16 // current object record and its sprite pair
+
+	// OnEvent, when set, is told about shots, kills, rescues and so on.
+	OnEvent func(Event)
 }
 
 // New creates a game from the main program ROM image (0x6000 bytes).

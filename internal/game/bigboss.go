@@ -224,6 +224,7 @@ func (g *Game) bossExplode() {
 			g.sndPushGame(g.k(0x49ee))
 		}
 		g.enq(4, 0x0d)
+		g.emit(EvBoss, 0, g.scoreValue(0x0d))
 		return
 	}
 	if a > 0xb4 {

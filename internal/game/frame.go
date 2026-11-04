@@ -54,6 +54,7 @@ func (g *Game) stageEndCheck() {
 	for i := uint16(0); i < 0x17; i++ {
 		g.wb(0xaa43+i*2, 0)
 	}
+	g.emit(EvStageClear, 0, 0)
 	g.nextStage()
 	g.saveLife()
 	g.wb(vSub, g.k(0x4a35))
@@ -112,6 +113,7 @@ func (g *Game) playerDead() {
 	g.sndBurst7()
 	lives := g.rb(0xad00) - 1
 	g.wb(0xad00, lives)
+	g.emit(EvDeath, 0, 0)
 	g.saveLife()
 	if lives == 0 {
 		if g.rb(vGameActive) == 0 {
@@ -249,6 +251,7 @@ func (g *Game) bonusPlane() {
 			g.decX(0)
 			n := g.X(7)
 			g.setX(7, n+1)
+			g.emit(EvRescue, int(n)+1, 0)
 			if n >= 4 {
 				g.enq(4, 0x0f)
 			} else {
