@@ -81,7 +81,7 @@ func Landscape(dst, up, hud, p1, p2 *image.RGBA) {
 	playerBlock(dst, hud, p1, rect{8, 0, 56, 16}, 0)
 	playerBlock(dst, hud, p2, rect{160, 0, 64, 16}, rx)
 	// hi-score and credits on the right, stage progress on the left
-	blit(dst, hud, rect{78, 0, 68, 16}, rx+6, 110)
+	blit(dst, hud, rect{78, 0, 68, 16}, rx+6, 90)
 	blit(dst, hud, rect{8, 248, 64, 8}, 8, 184)
 	blit(dst, hud, rect{72, 248, 64, 8}, 8, 196)
 	blit(dst, hud, rect{150, 248, 74, 8}, rx+4, 196)

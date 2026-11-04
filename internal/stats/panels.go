@@ -77,19 +77,19 @@ func DrawPanels(dst *image.RGBA, t *Tracker) {
 	small("RESCUED", num(life.Rescued), colValue)
 
 	// ---- right: best chain, then the kills per era ----------------------
-	ry := 90
-	DrawText(dst, rightX, ry, "BEST CHAIN", colLabel, 1)
-	DrawText(dst, rightX, ry+7, "x"+num(life.BestChain), colHot, 2)
-	ry = 130
+	ry := 110
+	DrawText(dst, rightX+4, ry, "BEST CHAIN", colLabel, 1)
+	DrawText(dst, rightX+4, ry+7, "x"+num(life.BestChain), colHot, 2)
+	ry = 132
 	for s := 0; s < Stages; s++ {
 		if ic := t.Icons[s]; ic != nil {
 			w, h := ic.Bounds().Dx(), ic.Bounds().Dy()
-			blitIcon(dst, ic, rightX+(14-w)/2, ry+(12-h)/2)
+			blitIcon(dst, ic, rightX+10+(14-w)/2, ry+(12-h)/2)
 		} else {
-			DrawText(dst, rightX+5, ry+3, "?", colDim, 1)
+			DrawText(dst, rightX+15, ry+3, "?", colDim, 1)
 		}
-		DrawText(dst, rightX+18, ry, num(game.Stage[s]), colValue, 1)
-		DrawText(dst, rightX+18, ry+6, num(life.Stage[s]), colDim, 1)
-		ry += 13
+		DrawText(dst, rightX+30, ry, num(game.Stage[s]), colValue, 1)
+		DrawText(dst, rightX+30, ry+6, num(life.Stage[s]), colDim, 1)
+		ry += 12
 	}
 }
